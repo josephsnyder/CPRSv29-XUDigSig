@@ -1,374 +1,151 @@
-{******************************************************************************}
-{                                                                              }
-{ Project JEDI Code Library (JCL)                                              }
-{                                                                              }
-{ The contents of this file are subject to the Mozilla Public License Version  }
-{ 1.1 (the "License"); you may not use this file except in compliance with the }
-{ License. You may obtain a copy of the License at http://www.mozilla.org/MPL/ }
-{                                                                              }
-{ Software distributed under the License is distributed on an "AS IS" basis,   }
-{ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for }
-{ the specific language governing rights and limitations under the License.    }
-{                                                                              }
-{ The Original Code is XlfMime.pas.                                            }
-{                                                                              }
-{ The Initial Developer of the Original Code is documented in the accompanying }
-{ help file JCL.chm. Portions created by these individuals are Copyright (C)   }
-{ 2000 of these individuals.                                                   }
-{                                                                              }
-{******************************************************************************}
-{                                                                              }
-{ Lightening fast Mime (Base64) Encoding and Decoding routines. Coded by Ralf  }
-{ Junker (ralfjunker@gmx.de).                                                  }
-{                                                                              }
-{ Unit owner: Marcel van Brakel                                                }
-{ Last modified: January 29, 2001                                              }
-{                                                                              }
-{******************************************************************************}
-
+//---------------------------------------------------------------------------
+// Copyright 2014 The Open Source Electronic Health Record Agent
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//---------------------------------------------------------------------------
 unit XlfMime;
 
-//{$I JCL.INC}
+interface 
 
-{$WEAKPACKAGEUNIT ON}
+uses  Windows,SysUtils,Registry, Dialogs, Classes, Forms, Controls,
+  StdCtrls;
+function MimeEncodedSize(dwlen:DWORD):DWORD;
+procedure MimeEncode(var hashVal;dwLen: DWORD;var hashStr);
 
-interface
-
-uses
-  Classes, SysUtils;
-
-function MimeEncodeString(const S: AnsiString): AnsiString;
-function MimeDecodeString(const S: AnsiString): AnsiString;
-procedure MimeEncodeStream(const InputStream: TStream; const OutputStream: TStream);
-procedure MimeDecodeStream(const InputStream: TStream; const OutputStream: TStream);
-function MimeEncodedSize(const I: Cardinal): Cardinal;
-function MimeDecodedSize(const I: Cardinal): Cardinal;
-procedure MimeEncode(var InputBuffer; const InputByteCount: Cardinal; var OutputBuffer);
-function MimeDecode(var InputBuffer; const InputBytesCount: Cardinal; var OutputBuffer): Cardinal;
-function MimeDecodePartial(var InputBuffer; const InputBytesCount: Cardinal;
-  var OutputBuffer; var ByteBuffer: Cardinal; var ByteBufferSpace: Cardinal): Cardinal;
-function MimeDecodePartialEnd(var OutputBuffer; const ByteBuffer: Cardinal;
-  const ByteBufferSpace: Cardinal): Cardinal;
 
 implementation
-
-// Caution: For MimeEncodeStream and all other kinds of multi-buffered
-// Mime encodings (i.e. Files etc.), BufferSize must be set to a multiple of 3.
-// Even though the implementation of the Mime decoding routines below
-// do not require a particular buffer size, they work fastest with sizes of
-// multiples of four. The chosen size is a multiple of 3 and of 4 as well.
-// The following numbers are, in addition, also divisible by 1024:
-// $2400, $3000, $3C00, $4800, $5400, $6000, $6C00.
-
-const
-  BUFFER_SIZE = $3000;
-  EqualSign = Byte('=');
-
-  MIME_ENCODE_TABLE: array [0..63] of Byte = (
-     65,  66,  67,  68,  69,  70,  71,  72,  // 00 - 07
-     73,  74,  75,  76,  77,  78,  79,  80,  // 08 - 15
-     81,  82,  83,  84,  85,  86,  87,  88,  // 16 - 23
-     89,  90,  97,  98,  99, 100, 101, 102,  // 24 - 31
-    103, 104, 105, 106, 107, 108, 109, 110,  // 32 - 39
-    111, 112, 113, 114, 115, 116, 117, 118,  // 40 - 47
-    119, 120, 121, 122,  48,  49,  50,  51,  // 48 - 55
-     52,  53,  54,  55,  56,  57,  43,  47); // 56 - 63
-
-  MIME_DECODE_TABLE: array [Byte] of Cardinal = (
-    255, 255, 255, 255, 255, 255, 255, 255, //  00 -  07
-    255, 255, 255, 255, 255, 255, 255, 255, //  08 -  15
-    255, 255, 255, 255, 255, 255, 255, 255, //  16 -  23
-    255, 255, 255, 255, 255, 255, 255, 255, //  24 -  31
-    255, 255, 255, 255, 255, 255, 255, 255, //  32 -  39
-    255, 255, 255,  62, 255, 255, 255,  63, //  40 -  47
-     52,  53,  54,  55,  56,  57,  58,  59, //  48 -  55
-     60,  61, 255, 255, 255, 255, 255, 255, //  56 -  63
-    255,   0,   1,   2,   3,   4,   5,   6, //  64 -  71
-      7,   8,   9,  10,  11,  12,  13,  14, //  72 -  79
-     15,  16,  17,  18,  19,  20,  21,  22, //  80 -  87
-     23,  24,  25, 255, 255, 255, 255, 255, //  88 -  95
-    255,  26,  27,  28,  29,  30,  31,  32, //  96 - 103
-     33,  34,  35,  36,  37,  38,  39,  40, // 104 - 111
-     41,  42,  43,  44,  45,  46,  47,  48, // 112 - 119
-     49,  50,  51, 255, 255, 255, 255, 255, // 120 - 127
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255);
-
-type
-  PByte4 = ^TByte4;
-  TByte4 = packed record
-    B1: Byte;
-    B2: Byte;
-    B3: Byte;
-    B4: Byte;
-  end;
-
-  PByte3 = ^TByte3;
-  TByte3 = packed record
-    B1: Byte;
-    B2: Byte;
-    B3: Byte;
-  end;
-
-//------------------------------------------------------------------------------
-// Wrapper functions & procedures
-//------------------------------------------------------------------------------
-
-function MimeEncodeString(const S: AnsiString): AnsiString;
-var
-  L: Cardinal;
-begin
-  L := Length(S);
-  if L > 0 then
+  function MimeEncodedSize(dwlen:DWORD):DWORD;
   begin
-    SetLength(Result, MimeEncodedSize(L));
-    MimeEncode(PChar(S)^, L, PChar(Result)^);
-  end
-  else
-    Result := '';
-end;
-
-//------------------------------------------------------------------------------
-
-function MimeDecodeString(const S: AnsiString): AnsiString;
-var
-  ByteBuffer, ByteBufferSpace: Cardinal;
-  L: Cardinal;
-begin
-  L := Length(S);
-  if L > 0 then
-  begin
-    SetLength(Result, MimeDecodedSize(L));
-    ByteBuffer := 0;
-    ByteBufferSpace := 4;
-    L := MimeDecodePartial(PChar(S)^, L, PChar(Result)^, ByteBuffer, ByteBufferSpace);
-    Inc(L, MimeDecodePartialEnd(PChar(Cardinal(Result) + L)^, ByteBuffer, ByteBufferSpace));
-    SetLength(Result, L);
-  end;
-end;
-
-//------------------------------------------------------------------------------
-
-procedure MimeEncodeStream(const InputStream: TStream; const OutputStream: TStream);
-var
-  InputBuffer: array [0..BUFFER_SIZE - 1] of Byte;
-  OutputBuffer: array [0..((BUFFER_SIZE + 2) div 3) * 4 - 1] of Byte;
-  BytesRead: Integer;
-begin
-  BytesRead := InputStream.Read(InputBuffer, SizeOf(InputBuffer));
-  while BytesRead > 0 do
-  begin
-    MimeEncode(InputBuffer, BytesRead, OutputBuffer);
-    OutputStream.Write(OutputBuffer, MimeEncodedSize(BytesRead));
-    BytesRead := InputStream.Read(InputBuffer, SizeOf(InputBuffer));
-  end;
-end;
-
-//------------------------------------------------------------------------------
-
-procedure MimeDecodeStream(const InputStream: TStream; const OutputStream: TStream);
-var
-  ByteBuffer, ByteBufferSpace: Cardinal;
-  InputBuffer: array [0..(BUFFER_SIZE + 3) div 4 * 3 - 1] of Byte;
-  OutputBuffer: array [0..BUFFER_SIZE - 1] of Byte;
-  BytesRead: Integer;
-begin
-  ByteBuffer := 0;
-  ByteBufferSpace := 4;
-  BytesRead := InputStream.Read(InputBuffer, SizeOf(InputBuffer));
-  while BytesRead > 0 do
-  begin
-    OutputStream.Write(OutputBuffer, MimeDecodePartial(InputBuffer, BytesRead, OutputBuffer, ByteBuffer, ByteBufferSpace));
-    BytesRead := InputStream.Read(InputBuffer, SizeOf(InputBuffer));
-  end;
-  OutputStream.Write(OutputBuffer, MimeDecodePartialEnd(OutputBuffer, ByteBuffer, ByteBufferSpace));
-end;
-
-//------------------------------------------------------------------------------
-// Helper functions
-//------------------------------------------------------------------------------
-
-function MimeEncodedSize(const I: Cardinal): Cardinal;
-begin
-  Result := (I + 2) div 3 * 4;
-end;
-
-//------------------------------------------------------------------------------
-
-function MimeDecodedSize(const I: Cardinal): Cardinal;
-begin
-  Result := (I + 3) div 4 * 3;
-end;
-
-//------------------------------------------------------------------------------
-// Primary functions & procedures
-//------------------------------------------------------------------------------
-
-procedure MimeEncode(var InputBuffer; const InputByteCount: Cardinal; var OutputBuffer);
-var
-  B: Cardinal;
-  InMax3: Cardinal;
-  InPtr, InLimitPtr: ^Byte;
-  OutPtr: PByte4;
-begin
-  if InputByteCount <= 0 then
-    Exit;
-
-  InPtr := @InputBuffer;
-  InMax3 := InputByteCount div 3 * 3;
-  OutPTr := @OutputBuffer;
-  Cardinal(InLimitPtr) := Cardinal(InPtr) + InMax3;
-
-  while InPtr <> InLimitPtr do
-  begin
-    B := InPtr^;
-    B := B shl 8;
-    Inc(InPtr);
-    B := B or InPtr^;
-    B := B shl 8;
-    Inc(InPtr);
-    B := B or InPtr^;
-    Inc(InPtr);
-    // Write 4 bytes to OutputBuffer (in reverse order).
-    OutPtr.B4 := MIME_ENCODE_TABLE[B and $3F];
-    B := B shr 6;
-    OutPtr.B3 := MIME_ENCODE_TABLE[B and $3F];
-    B := B shr 6;
-    OutPtr.B2 := MIME_ENCODE_TABLE[B and $3F];
-    B := B shr 6;
-    OutPtr.B1 := MIME_ENCODE_TABLE[B];
-    Inc(OutPtr);
+    Result := (dwlen +2) div 3 * 4;
   end;
 
-  case InputByteCount - InMax3 of
-    1:
-      begin
-        B := InPtr^;
-        B := B shl 4;
-        OutPtr.B2 := MIME_ENCODE_TABLE[B and $3F];
-        B := B shr 6;
-        OutPtr.B1 := MIME_ENCODE_TABLE[B];
-        OutPtr.B3 := EqualSign; // Fill remaining 2 bytes.
-        OutPtr.B4 := EqualSign;
-      end;
-    2:
-      begin
-        B := InPtr^;
-        Inc(InPtr);
-        B := B shl 8;
-        B := B or InPtr^;
-        B := B shl 2;
-        OutPtr.B3 := MIME_ENCODE_TABLE[B and $3F];
-        B := B shr 6;
-        OutPTr.b2 := MIME_ENCODE_TABLE[B and $3F];
-        B := B shr 6;
-        OutPtr.B1 := MIME_ENCODE_TABLE[B];
-        OutPtr.B4 := EqualSign; // Fill remaining byte.
-      end;
+  // Code found from:
+  // http://www.delphigeist.com/2009/09/get-integer-bits.html
+  function GetBitState(Num, BitNum: Cardinal): Boolean;
+  asm
+      BT   Num, BitNum
+      SETC al
   end;
-end;
 
-//------------------------------------------------------------------------------
-
-function MimeDecode(var InputBuffer; const InputBytesCount: Cardinal; var OutputBuffer): Cardinal;
-var
-  ByteBuffer, ByteBufferSpace: Cardinal;
-  ob: pchar;
-begin
-  ByteBuffer := 0;
-  ByteBufferSpace := 4;
-  Result := MimeDecodePartial(InputBuffer, InputBytesCount, OutputBuffer, ByteBuffer, ByteBufferSpace);
-  ob := @OutputBuffer;
-  inc(ob,integer(Result));
-  //Inc(Result, MimeDecodePartialEnd(PChar(Cardinal(OutputBuffer) + Result)^, ByteBuffer, ByteBufferSpace));
-  Inc(Result, MimeDecodePartialEnd(ob^, ByteBuffer, ByteBufferSpace));
-end;
-
-//------------------------------------------------------------------------------
-
-function MimeDecodePartial(var InputBuffer; const InputBytesCount: Cardinal;
-  var OutputBuffer; var ByteBuffer: Cardinal; var ByteBufferSpace: Cardinal): Cardinal;
-var
-  lByteBuffer, lByteBufferSpace, C: Cardinal;
-  InPtr, InLimitPtr: ^Byte;
-  OutPtr: PByte3;
-begin
-  if InputBytesCount > 0 then
+  // Code found from:
+  // http://www.delphigeist.com/2009/09/get-integer-bits.html
+  function BoolToChar(Value: Boolean): Char;
   begin
-    InPtr := @InputBuffer;
-    Cardinal(InLimitPtr) := Cardinal(InPtr) + InputBytesCount;
-    OutPtr := @OutputBuffer;
-    lByteBuffer := ByteBuffer;
-    lByteBufferSpace := ByteBufferSpace;
-    while InPtr <> InLimitPtr do
+    if Value then
+      Result := '1' else
+      Result := '0';
+  end;
+
+  // Code found from:
+  // http://www.delphigeist.com/2009/09/get-integer-bits.html
+  function GetIntBits(Value: Integer; Length: integer): String;
+  var
+    index: Integer;
+  begin
+    SetLength(Result, Length);
+    for index := Length-1 downto 0 do
+      Result[Length-index] := BoolToChar(GetBitState(Value, index));
+  end;
+  
+  // Code found from:
+  //http://www.delphipages.com/forum/showthread.php?t=193429
+  function BinToInt(val : string): Integer;
+  var
+  i, buff : Integer;
+  begin
+  Result:=0;
+  buff:=Length(val);
+  for i:=buff downto 1 do
+  if val[i]='1' then
+  Result:=Result+(1 shl (buff-i));
+  end;
+
+  {This procedure takes a pointer to an array of byte values,
+  the length of that array, and a pointer to an output string
+  
+  It will turn the array byte values into a string that represents
+  the bit values using 8 bytes, then take 3 bytes at a time and use
+  that to create the encoded string.
+  
+  }
+  procedure MimeEncode(var hashVal;dwLen: DWORD;var hashStr);
+  const
+   Map: array[0..63] of Char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+    'abcdefghijklmnopqrstuvwxyz0123456789+/';
+  var
+    //Counter Variables
+    i,k:integer;
+    //Values to hold the bit representation and the length of that string    
+    bitstrsize: integer;
+    bitstring : string;
+    //encodeval  used to hold each 3 byte pattern during encoding
+    encodeval : string;
+    // String to maintain length of encoded string
+    sHashStr : string;
+    //Pointers to each of the input
+    pHashVal  : ^Byte;
+    pHashStr  : ^char;
+  begin
+  //Initialize strings and pointers
+  sHashStr := '';
+  bitstring := '';
+  pHashVal := @hashVal;
+  pHashStr := @hashStr;
+  // Capture each int from the input pointer,
+  // transform it to a string representation,
+  // and append it to the total message.
+  // Increase the pointers position after each one.
+  for i := 0 to dwLen -1 do
     begin
-      C := MIME_DECODE_TABLE[InPtr^]; // Read from InputBuffer.
-      Inc(InPtr);
-      if C = $FF then
-        Continue;
-
-      lByteBuffer := lByteBuffer shl 6;
-      lByteBuffer := lByteBuffer or C;
-      Dec(lByteBufferSpace);
-      if lByteBufferSpace <> 0 then
-        Continue; // Read 4 bytes from InputBuffer?
-
-      OutPtr.B3 := Byte(lByteBuffer); // Write 3 bytes to OutputBuffer (in reverse order).
-      lByteBuffer := lByteBuffer shr 8;
-      OutPtr.B2 := Byte(lByteBuffer);
-      lByteBuffer := lByteBuffer shr 8;
-      OutPtr.B1 := Byte(lByteBuffer);
-      lByteBuffer := 0;
-      Inc(OutPtr);
-      lByteBufferSpace := 4;
+      bitstring := Concat(bitstring,GetIntBits(pHashVal^,8));
+      Inc(pHashVal);
     end;
-    ByteBuffer := lByteBuffer;
-    ByteBufferSpace := lByteBufferSpace;
-    Result := Cardinal(OutPtr) - Cardinal(@OutputBuffer);
-  end
-  else
-    Result := 0;
-end;
-
-//------------------------------------------------------------------------------
-
-function MimeDecodePartialEnd(var OutputBuffer; const ByteBuffer: Cardinal;
-  const ByteBufferSpace: Cardinal): Cardinal;
-var
-  lByteBuffer: Cardinal;
-begin
-  case ByteBufferSpace of
-    1:
+  //Calculate the length of the total representation
+  bitstrsize := length(bitstring);
+  //Reset count variable to start at the first position
+  i:=1;
+  //Ensure that i is less than the total string size
+  // while incrementing by 6 at the end of each loop
+  while i < bitstrsize do
+  begin
+    //reset encodeval after each loop of 6 values
+    encodeval := '';
+    //Capture the next 6 bit values
+    for k:=0 to 5 do
       begin
-        lByteBuffer := ByteBuffer shr 2;
-        PByte3(@OutputBuffer).B2 := Byte(lByteBuffer);
-        lByteBuffer := lByteBuffer shr 8;
-        PByte3(@OutputBuffer).B1 := Byte(lByteBuffer);
-        Result := 2;
+        //if the queried bit goes beyond the total string length,
+        // append a zero
+        if i+k > bitstrsize then  encodeval := encodeval + '0'
+        else      encodeval := encodeval + bitstring[i+k];
       end;
-    2:
-      begin
-        lByteBuffer := ByteBuffer shr 4;
-        PByte3(@OutputBuffer).B1 := Byte(lByteBuffer);
-        Result := 1;
-      end;
-  else
-    Result := 0;
+    //Set the character that the encodeval represents in both the output
+    // pointer and append it to the local string representation
+    //
+    pHashStr^ := map[BinToInt(encodeval)];
+    sHashStr := Concat(sHashStr,map[BinToInt(encodeval)]);
+    //Move to the next place in the pointer, and move to the next 6 bit
+    //starting point
+    Inc(pHashStr);
+    i := i + 6;
   end;
-end;
+  //Append '=' to the encoded string with until it matches the expected output
+  //length of the message, found as result of the MimeEncodedSize function
+  while length(sHashStr) < MimeEncodedSize(dwLen) do
+  begin
+    sHashStr := Concat(sHashStr,'=');
+    pHashStr^ := '=';
+    Inc(pHashStr);
+  end;
 
+  end;
 end.
