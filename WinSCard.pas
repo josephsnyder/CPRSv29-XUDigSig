@@ -64,16 +64,16 @@ type
   SCARDCONTEXT = DWORD;
   function SCardReleaseContext(hContext: ULONG):DWORD; stdcall;
   function SCardDisconnect(hContext:DWORD; dwDisposition: DWORD):DWORD; stdcall;
-  function SCardReconnect(hContext: DWORD;dwshareMode:DWORD;dwPrefProtocol: integer; dwInitialization:DWORD;var pdwActiveProtocol:LongInt):DWORD; stdcall;
+  function SCardReconnect(hContext: DWORD;dwshareMode:DWORD;dwPrefProtocol: DWORD; dwInitialization:DWORD;var pdwActiveProtocol:LongInt):DWORD; stdcall;
   function SCardEstablishContext(dwScope:DWORD;pvReserved1:pointer;pvReserved2:pointer;phContext:pointer):DWORD; stdcall;
-  function SCardListReadersA(hContext: SCARDCONTEXT;mszGroups:pointer;mszReaders:pointer;var pcchReaders:integer):DWORD; stdcall;
+  function SCardListReadersA(hContext: SCARDCONTEXT;mszGroups:pointer;mszReaders:pointer;var pcchReaders: integer):DWORD; stdcall;
   function SCardConnectA(hContext: SCARDCONTEXT;szReader:pointer;dwShareMode:DWORD;dwPreferredProtocols:DWORD;var hCardContext;pdwActiveProtocol:pointer):DWORD; stdcall;
 
 implementation
 
   function SCardReleaseContext(hContext: ULONG):DWORD; external WinSCardDLL name 'SCardReleaseContext';
   function SCardDisconnect(hContext:DWORD; dwDisposition: DWORD):DWORD; external WinSCardDLL name 'SCardDisconnect';
-  function SCardReconnect(hContext: DWORD;dwShareMode:DWORD;dwPrefProtocol: integer; dwInitialization:DWORD;var pdwActiveProtocol:LongInt):DWORD; external WinSCardDLL name 'SCardReconnect';
+  function SCardReconnect(hContext: DWORD;dwShareMode:DWORD;dwPrefProtocol: DWORD; dwInitialization:DWORD;var pdwActiveProtocol:LongInt):DWORD; external WinSCardDLL name 'SCardReconnect';
   function SCardEstablishContext(dwScope:DWORD;pvReserved1:pointer;pvReserved2:pointer;phContext:pointer):DWORD; external WinSCardDLL name 'SCardEstablishContext';
   function SCardListReadersA(hContext: SCARDCONTEXT;mszGroups:pointer;mszReaders:pointer;var pcchReaders:integer):DWORD; external WinSCardDLL name 'SCardListReadersA';
   function SCardConnectA(hContext: SCARDCONTEXT;szReader:pointer;dwShareMode:DWORD;dwPreferredProtocols:DWORD;var hCardContext;pdwActiveProtocol:pointer):DWORD; external WinSCardDLL name 'SCardConnectA';

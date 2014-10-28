@@ -263,9 +263,9 @@ type
       value:DWORD;
       class operator Implicit(a:WCRYPT2Type): boolean;
       class operator Implicit(a:WCRYPT2Type): cardinal;
-      class operator GreaterThan(a:WCRYPT2Type;b:integer):boolean;
-      class operator Equal(a:WCRYPT2Type;b:integer):boolean;
-      class operator NotEqual(a:WCRYPT2Type;b:integer):boolean;
+      class operator GreaterThan(a:WCRYPT2Type;b:DWORD):boolean;
+      class operator Equal(a:WCRYPT2Type;b:DWORD):boolean;
+      class operator NotEqual(a:WCRYPT2Type;b:DWORD):boolean;
   end;
 
   pCharArray = array[0..0] of pByte;
@@ -300,8 +300,8 @@ type
   PCERT_CHAIN_ENGINE_CONFIG = ^CERT_CHAIN_ENGINE_CONFIG;
 
   TRUST_STATUS = record
-    dwErrorStatus: integer;
-    dwInfoStatus : integer;
+    dwErrorStatus: DWORD;
+    dwInfoStatus : DWORD;
   end;
 
 
@@ -452,7 +452,7 @@ type
   CRYPT_KEY_PROV_INFO = class
     pwszContainerName: pointer;
     pwszProvName: pointer;
-    dwKeySpec : integer;
+    dwKeySpec : DWORD;
   end;
   PCRL_DIST_POINT = ^CRL_DIST_POINT;
 
@@ -463,7 +463,7 @@ type
   end;
   PCERT_ALT_NAME_ENTRY = record
     pwszURL:STRING;
-    dwAltNameChoice:integer;
+    dwAltNameChoice:DWORD;
   end;
   CERT_ALT_NAME_INFO = record
     rgAltEntry: PCERT_ALT_NAME_ENTRY;
@@ -765,17 +765,17 @@ type
   function CryptDestroyKey(hPassKey: HCRYPTKEY) : boolean; stdcall;
   function CryptCreateHash(hProv: HCRYPTPROV; c_HASH_ALGID: ALG_ID;kHEY: HCRYPTKEY; dwFlags: DWORD;phHash: pointer) : boolean; stdcall;
   function CryptDestroyHash(hHash: HCRYPTHASH) : boolean; stdcall;
-  function CryptHashData(hHash: HCRYPTHASH; pB: pByte; cnt: integer; flag: integer) : boolean; stdcall;
+  function CryptHashData(hHash: HCRYPTHASH; pB: pByte; cnt: DWORD; flag: DWORD) : boolean; stdcall;
   function CryptReleaseContext(hProv: HCRYPTPROV; force_flag: ULONG) : boolean; stdcall;
-  function CryptGetHashParam(hHash: HCRYPTHASH; HP_HASHVAL: integer; pbData: pointer;pdwDataLen: pointer; dwFlags: DWORD) : boolean; stdcall;
+  function CryptGetHashParam(hHash: HCRYPTHASH; HP_HASHVAL: DWORD; pbData: pointer;pdwDataLen: pointer; dwFlags: DWORD) : boolean; stdcall;
   function CryptSignMessage(pSignPara: pointer; fDetachedSig:boolean;cToBeSigned:DWORD;rgpbToBeSigned:pointer;rgcbToBeSigned:pointer; pbSignedBlob:pointer; pcbSignedBlob: PDWORD): boolean; stdcall;
-  function CryptMsgOpenToDecode(encodingtype:DWORD;dwFlags:DWORD;dwMessageType:DWORD;HCryptProv:integer;recipInfo:pointer;streamInfo:pointer): HCRYPTMSG; stdcall;
+  function CryptMsgOpenToDecode(encodingtype:DWORD;dwFlags:DWORD;dwMessageType:DWORD;HCryptProv:DWORD;recipInfo:pointer;streamInfo:pointer): HCRYPTMSG; stdcall;
   function CryptMsgOpenToEncode(encodingtype:DWORD;dwFlags:DWORD;dwMessageType:DWORD;MsgEncodeInfo:pointer;InnerContentObjID:pointer;streamInfo:pointer): HCRYPTMSG; stdcall;
-  function CryptMsgUpdate(hmsg:HCRYPTMSG; pBlob: pointer;blobsize:integer;lastcall:boolean):boolean; stdcall;
+  function CryptMsgUpdate(hmsg:HCRYPTMSG; pBlob: pointer;blobsize:DWORD;lastcall:boolean):boolean; stdcall;
   function CryptMsgGetParam(hMsg:HCRYPTMSG;dwParamType:DWORD;dwIndex:DWORD;pvData:pointer;pcbData:pointer) : boolean; stdcall;
-  function CryptMsgControl(msg:HCRYPTMSG;flags:integer;CMSG_CTRL_VERIFY_SIGNATURE:integer;certinfo:pointer): boolean; stdcall;
-  function CryptDecodeObject(encodingtype:DWORD;StructType:LPCSTR;pbData:pointer;cbData:DWORD;flag:integer;dist_info: pointer ;cbuff:pointer):boolean; stdcall;
-  function CryptSetProvParam(handleValue:DWORD;i:integer;text:pointer;Flags:Cardinal): boolean; stdcall;
+  function CryptMsgControl(msg:HCRYPTMSG;flags:DWORD;CMSG_CTRL_VERIFY_SIGNATURE:DWORD;certinfo:pointer): boolean; stdcall;
+  function CryptDecodeObject(encodingtype:DWORD;StructType:LPCSTR;pbData:pointer;cbData:DWORD;flag:DWORD;dist_info: pointer ;cbuff:pointer):boolean; stdcall;
+  function CryptSetProvParam(handleValue:DWORD;i:DWORD;text:pointer;Flags:Cardinal): boolean; stdcall;
   function CryptMsgClose(hmsg: HCRYPTMSG):boolean; stdcall;
   function CryptVerifyMessageSignature(verifyPara:PCRYPT_VERIFY_MESSAGE_PARA;SignerIndex:DWORD;pbSignedBlob:pointer;cbSignedBlob:DWORD;pbDecoded:pointer;pcbDecoded:pointer;ppSignerCert:pointer):boolean; stdcall;
   function CryptGenKey(hProv: HCRYPTPROV;AlgId: ALG_ID;dwFlags:DWORD;hKey:pointer):boolean; stdcall;
@@ -789,17 +789,17 @@ type
 
 
   function CertVerifyRevocation(c_ENCODING_TYPE: DWORD; dwRevType: DWORD; cContext: DWORD; rgpvContext: pointer; dwFlags:DWORD; pRevPara: pointer; pRevStatus: pointer) : boolean; stdcall;
-  function CertOpenSystemStoreA(hProv: HCRYPTPROV; szSubsystemProtocol: PAnsiChar) : integer; stdcall;
-  function CertOpenSystemStore(hProv: HCRYPTPROV; szSubsystemProtocol: PAnsiChar) : integer; stdcall;
+  function CertOpenSystemStoreA(hProv: HCRYPTPROV; szSubsystemProtocol: PAnsiChar) : DWORD; stdcall;
+  function CertOpenSystemStore(hProv: HCRYPTPROV; szSubsystemProtocol: PAnsiChar) : DWORD; stdcall;
   function CertEnumCertificatesInStore(hCertStore: HCERTSTORE;i: pointer): PCCERT_CONTEXT; stdcall;
-  function CertGetNameString(pCertContext: pointer; dwType: DWORD; dwFlags:DWORD; pvTypePara: pointer; pszNameString: pChar; cchNameString: integer): WCrypt2Type; stdcall;
-  function CertVerifyTimeValidity(i: pointer; pCertInfo: pCert_Info): integer; stdcall;
+  function CertGetNameString(pCertContext: pointer; dwType: DWORD; dwFlags:DWORD; pvTypePara: pointer; pszNameString: pChar; cchNameString: DWORD): WCrypt2Type; stdcall;
+  function CertVerifyTimeValidity(i: pointer; pCertInfo: pCert_Info): DWORD; stdcall;
   function CertFindExtension( address :LPCSTR; cExtension: DWORD; rgExtension: PPVOID) : PCERT_EXTENSION; stdcall; stdcall;
-  function CertOpenStore( CERT_STORE_PROV_MSG: pointer;encoding_type: DWORD;i:integer;flags:integer;hMsg:pointer):HCERTSTORE; stdcall;
+  function CertOpenStore( CERT_STORE_PROV_MSG: pointer;encoding_type: DWORD;i:DWORD;flags:DWORD;hMsg:pointer):HCERTSTORE; stdcall;
   function CertGetSubjectCertificateFromStore(hCertStore:HCERTSTORE;encoding_type:DWORD;infoblob:pointer): PCCERT_CONTEXT; stdcall;
   function CertCreateCertificateChainEngine( config: pointer;var chainEngine):boolean; stdcall;
-  function CertGetCertificateChain(chainEngine:HCERTCHAINENGINE;CertContext:PCCERT_CONTEXT;time:pointer;additionalstores:integer;ChainPara:pointer;dwFlags:integer;reserved:pointer;var ChainContext:PCCERT_CHAIN_CONTEXT):boolean; stdcall;
-  function CertGetIntendedKeyUsage(encodingtype:DWORD;pCertInfo:pCert_Info;pb:pointer;flag:integer):boolean; stdcall;
+  function CertGetCertificateChain(chainEngine:HCERTCHAINENGINE;CertContext:PCCERT_CONTEXT;time:pointer;additionalstores:DWORD;ChainPara:pointer;dwFlags:DWORD;reserved:pointer;var ChainContext:PCCERT_CHAIN_CONTEXT):boolean; stdcall;
+  function CertGetIntendedKeyUsage(encodingtype:DWORD;pCertInfo:pCert_Info;pb:pointer;flag:DWORD):boolean; stdcall;
   function CertFindCertificateInStore(store:HCERTSTORE;EncodingType:DWORD;FindFlags:DWORD;FindType:DWORD;FindPara:pointer;context:PCCERT_CONTEXT):PCCERT_CONTEXT;stdcall;
   function  CertFreeCertificateContext(pCertContext: pointer):boolean; stdcall;
   procedure CertFreeCertificateChainEngine(chainengine: HCERTCHAINENGINE); stdcall;
@@ -823,17 +823,17 @@ implementation
     Result := a.value;
   end;
 
-  class operator WCRYPT2Type.GreaterThan(a:WCRYPT2Type;b:integer): boolean;
+  class operator WCRYPT2Type.GreaterThan(a:WCRYPT2Type;b:DWORD): boolean;
   begin
     Result := (a.value > b);
   end;
 
-  class operator WCRYPT2Type.Equal(a:WCRYPT2Type;b:integer): boolean;
+  class operator WCRYPT2Type.Equal(a:WCRYPT2Type;b:DWORD): boolean;
   begin
     Result := (a.value = b);
   end;
 
-  class operator WCRYPT2Type.NotEqual(a:WCRYPT2Type;b:integer): boolean;
+  class operator WCRYPT2Type.NotEqual(a:WCRYPT2Type;b:DWORD): boolean;
   begin
     Result := not(a.value = b);
   end;
