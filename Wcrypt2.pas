@@ -257,6 +257,16 @@ CMSG_CTRL_ADD_CMS_SIGNER_INFO     = 20;
   CERT_CHAIN_REVOCATION_CHECK_CHAIN=$20000000;
   CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT=$40000000;
 
+
+  // http://referencesource.microsoft.com/#System.Security/cryptography/cryptoapi.cs
+  CERT_STORE_ADD_NEW                                 = 1;
+  CERT_STORE_ADD_USE_EXISTING                        = 2;
+  CERT_STORE_ADD_REPLACE_EXISTING                    = 3;
+  CERT_STORE_ADD_ALWAYS                              = 4;
+  CERT_STORE_ADD_REPLACE_EXISTING_INHERIT_PROPERTIES = 5;
+  CERT_STORE_ADD_NEWER                               = 6;
+  CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES            = 7;
+
 type
 
   WCRYPT2Type = record
@@ -801,7 +811,10 @@ type
   function CertGetCertificateChain(chainEngine:HCERTCHAINENGINE;CertContext:PCCERT_CONTEXT;time:pointer;additionalstores:DWORD;ChainPara:pointer;dwFlags:DWORD;reserved:pointer;var ChainContext:PCCERT_CHAIN_CONTEXT):boolean; stdcall;
   function CertGetIntendedKeyUsage(encodingtype:DWORD;pCertInfo:pCert_Info;pb:pointer;flag:DWORD):boolean; stdcall;
   function CertFindCertificateInStore(store:HCERTSTORE;EncodingType:DWORD;FindFlags:DWORD;FindType:DWORD;FindPara:pointer;context:PCCERT_CONTEXT):PCCERT_CONTEXT;stdcall;
-  function  CertFreeCertificateContext(pCertContext: pointer):boolean; stdcall;
+  function CertFreeCertificateContext(pCertContext: pointer):boolean; stdcall;
+  function CertCreateCertificateContext(dwCertEncodingType: DWORD;pbCertEncoded:pointer;cbCertEncoded:DWORD): PCCERT_CONTEXT ;stdcall;
+  function CertAddCertificateContextToStore(hCertStore:HCERTSTORE;pCertContext: PCCERT_CONTEXT;dwAddDisposition:DWORD;ppStoreContext:pointer):boolean; stdcall;
+  function CertDeleteCertificateFromStore(pCertContext: PCCERT_CONTEXT):boolean; stdcall;
   procedure CertFreeCertificateChainEngine(chainengine: HCERTCHAINENGINE); stdcall;
   procedure CertFreeCertificateChain(chain: PCCERT_CHAIN_CONTEXT); stdcall;
   function CertCloseStore(hCertStore :HCERTSTORE; dwFlags :DWORD):BOOL ; stdcall;
@@ -881,6 +894,9 @@ implementation
   function CertGetSubjectCertificateFromStore; external CRYPT32 name 'CertGetSubjectCertificateFromStore';
   function CertCreateCertificateChainEngine; external CRYPT32 name 'CertCreateCertificateChainEngine';
   function CertFindCertificateInStore; external CRYPT32 name 'CertFindCertificateInStore';
+  function CertAddCertificateContextToStore; external CRYPT32 name 'CertAddCertificateContextToStore';
+  function CertDeleteCertificateFromStore; external CRYPT32 name 'CertDeleteCertificateFromStore';
+  function CertCreateCertificateContext; external CRYPT32 name 'CertCreateCertificateContext';
 
   function CertGetCertificateChain; external CRYPT32 name 'CertGetCertificateChain';
   function CertGetIntendedKeyUsage; external CRYPT32 name 'CertGetIntendedKeyUsage';
