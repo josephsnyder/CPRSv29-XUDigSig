@@ -459,10 +459,22 @@ type
 
   end;
 
-  CRYPT_KEY_PROV_INFO = class
+  CRYPT_KEY_PROV_PARAM = record
+    dwParam : DWORD;
+    pbData : pointer;
+    cbData : DWORD;
+    dwFlags : DWORD;
+  end;
+  PCRYPT_KEY_PROV_PARAM = ^CRYPT_KEY_PROV_PARAM;
+
+  CRYPT_KEY_PROV_INFO = record
     pwszContainerName: pointer;
     pwszProvName: pointer;
-    dwKeySpec : DWORD;
+    dwProvType:DWORD;
+    dwFlags:DWORD;
+    cProvParam:DWORD;
+    rgProvParam:PCRYPT_KEY_PROV_PARAM;
+    dwKeySpec:DWORD;
   end;
   PCRL_DIST_POINT = ^CRL_DIST_POINT;
 
