@@ -902,7 +902,11 @@ implementation
   function CertOpenSystemStoreA; external CRYPT32 name 'CertOpenSystemStoreA';
   function CertOpenSystemStore; external CRYPT32 name 'CertOpenSystemStoreA';
   function CertEnumCertificatesInStore; external CRYPT32 name 'CertEnumCertificatesInStore';
-  function CertGetNameString; external CRYPT32 name 'CertGetNameStringW';
+  {$IF CompilerVersion < 20}
+    function CertGetNameString; external CRYPT32 name 'CertGetNameStringA';
+  {$ELSE}
+    function CertGetNameString; external CRYPT32 name 'CertGetNameStringW';
+  {$IFEND}
   function CertGetNameStringA; external CRYPT32 name 'CertGetNameStringA';
   function CertGetNameStringW; external CRYPT32 name 'CertGetNameStringW';
   function CertVerifyTimeValidity; external CRYPT32 name 'CertVerifyTimeValidity';
