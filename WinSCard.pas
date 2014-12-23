@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Copyright 2014 The Open Source Electronic Health Record Agent
+// Copyright 2014 The Open Source Electronic Health Record Alliance
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,14 @@
 
 unit WinSCard;
 
+{
+Date Created: 12/22/2014
+Site Name: OSEHRA
+Developer: Joseph Snyder (snyderj@osehra.org)
+Description: Function signatures for Windows Smart Card connections
+}
+
 interface
-
-
 
 uses  Windows;
 
@@ -55,10 +60,9 @@ const
   SCARD_PROTOCOL_T0 = 1;
   SCARD_PROTOCOL_T1 = 2;
   SCARD_PROTOCOL_RAW = 65536;
-
   SCARD_S_SUCCESS=0;
-
   SCARD_AUTOALLOCATE=DWORD(-1);
+
 type
 
   SCARDCONTEXT = DWORD;

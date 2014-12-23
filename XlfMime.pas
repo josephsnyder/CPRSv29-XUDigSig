@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Copyright 2014 The Open Source Electronic Health Record Agent
+// Copyright 2014 The Open Source Electronic Health Record Alliance
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //---------------------------------------------------------------------------
+
+{
+Date Created: 12/22/2014
+Site Name: OSEHRA
+Developer: Joseph Snyder (snyderj@osehra.org)
+Description: Base64 encoding using EncdDecd Library
+}
 unit XlfMime;
 
 interface
@@ -43,8 +50,8 @@ implementation
   }
   procedure MimeEncode(var hashVal;dwLen: DWORD; var hashStr);
   const
-   Map: array[0..63] of Char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-    'abcdefghijklmnopqrstuvwxyz0123456789+/';
+    Map: array[0..63] of Char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+      'abcdefghijklmnopqrstuvwxyz0123456789+/';
   var
     //Counter Variable
     i: DWORD;
@@ -97,14 +104,14 @@ implementation
     OutStream.Free;
   end;
 
-function MimeEncodeString(hashVal: string): string;
+  function MimeEncodeString(hashVal: string): string;
   begin
     //When given a string, use the SOAP.EncdDecd library to
     //Encode the string directly
     Result := EncdDecd.EncodeString(hashVal);
   end;
 
-function MimeDecodeString(hashedStr : string) : string;
+  function MimeDecodeString(hashedStr : string) : string;
   begin
     //When given a string, use the SOAP.EncdDecd library to
     //Decode the string directly

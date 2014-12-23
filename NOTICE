@@ -1,0 +1,16 @@
+Submitted by: Joseph Snyder <snyderj@osehra.org>
+Copyright 2014 The Open Source Electronic Health Record Alliance
+
+This product includes software developed for the Open Source
+Electronic Health Record Alliance (http://www.osehra.org/).
+
+The Apache 2 license covers the following source and test files
+
+Source: 
+  XlfMime.pas
+  Wcrypt2.pas
+  WinSCard.pas
+Test: 
+  UTXlfMime.pas
+  UTWcrypt2.pas
+  UTWinSCard.pas

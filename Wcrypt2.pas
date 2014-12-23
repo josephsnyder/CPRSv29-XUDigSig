@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-// Copyright 2014 The Open Source Electronic Health Record Agent
+// Copyright 2014 The Open Source Electronic Health Record Alliance
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,18 @@
 
 unit Wcrypt2;
 
+{
+Date Created: 12/22/2014
+Site Name: OSEHRA
+Developer: Joseph Snyder (snyderj@osehra.org)
+Description: Function Signatures for Windows Certificate management functions
+}
 interface
 
 uses SysUtils, Windows, Registry, Dialogs, Classes, Forms, Controls,
   StdCtrls;
-
-
+  
 const
-
   {
     Most Values from in the const were taken from
     http://www.math.uiuc.edu/~gfrancis/illimath/windows/aszgard_mini/bin/MinGW/include/wincrypt.h
@@ -33,7 +37,6 @@ const
   }
   CRYPT32     = 'crypt32.dll';
   ADVAPI32    = 'Advapi32.dll';
-  WIN32PROJECT1 = 'Win32Project1.dll';
   ALG_CLASS_ANY=0;
   ALG_CLASS_SIGNATURE=8192;
   ALG_CLASS_MSG_ENCRYPT=16384;
@@ -41,7 +44,9 @@ const
   ALG_CLASS_HASH =32768;
   ALG_CLASS_KEY_EXCHANGE=40960;
   CALG_SHA_256 = $0000800c;
+  CALG_SHA = $00008004;
   CALG_RC2 = $00006602;
+  CALG_RSA_SIGN = $00002400;
   AT_KEYEXCHANGE = 1;
   AT_SIGNATURE =  2;
   CRYPT_EXPORTABLE = 1;
@@ -101,8 +106,6 @@ const
   CERT_STORE_READONLY_FLAG =$00008000;
   CERT_STORE_OPEN_EXISTING_FLAG =$00004000;
 
-
-
   USAGE_MATCH_TYPE_AND=0;
   USAGE_MATCH_TYPE_OR =1;
   CRL_DIST_POINT_FULL_NAME=0;
@@ -131,33 +134,33 @@ const
 
 
   CERT_NAME_EMAIL_TYPE=1;
- //  http://doxygen.reactos.org/d7/d4a/wincrypt_8h_source.html
-CMSG_BARE_CONTENT_FLAG            =  $00000001;
-CMSG_LENGTH_ONLY_FLAG             =  $00000002;
-CMSG_DETACHED_FLAG                =  $00000004;
-CMSG_AUTHENTICATED_ATTRIBUTES_FLAG=  $00000008;
-CMSG_CONTENTS_OCTETS_FLAG         =  $00000010;
-CMSG_MAX_LENGTH_FLAG              =  $00000020;
-CMSG_CMS_ENCAPSULATED_CONTENT_FLAG=  $00000040;
-CMSG_CRYPT_RELEASE_CONTEXT_FLAG   =  $00008000;
-CMSG_CTRL_VERIFY_SIGNATURE        = 1;
-CMSG_CTRL_DECRYPT                 = 2;
-CMSG_CTRL_VERIFY_HASH             = 5;
-CMSG_CTRL_ADD_SIGNER              = 6;
-CMSG_CTRL_DEL_SIGNER              = 7;
-CMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR  = 8;
-CMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR  = 9;
-CMSG_CTRL_ADD_CERT                = 10;
-CMSG_CTRL_DEL_CERT                = 11;
-CMSG_CTRL_ADD_CRL                 = 12;
-CMSG_CTRL_DEL_CRL                 = 13;
-CMSG_CTRL_ADD_ATTR_CERT           = 14;
-CMSG_CTRL_DEL_ATTR_CERT           = 15;
-CMSG_CTRL_KEY_TRANS_DECRYPT       = 16;
-CMSG_CTRL_KEY_AGREE_DECRYPT       = 17;
-CMSG_CTRL_MAIL_LIST_DECRYPT       = 18;
-CMSG_CTRL_VERIFY_SIGNATURE_EX     = 19;
-CMSG_CTRL_ADD_CMS_SIGNER_INFO     = 20;
+  //  http://doxygen.reactos.org/d7/d4a/wincrypt_8h_source.html
+  CMSG_BARE_CONTENT_FLAG            =  $00000001;
+  CMSG_LENGTH_ONLY_FLAG             =  $00000002;
+  CMSG_DETACHED_FLAG                =  $00000004;
+  CMSG_AUTHENTICATED_ATTRIBUTES_FLAG=  $00000008;
+  CMSG_CONTENTS_OCTETS_FLAG         =  $00000010;
+  CMSG_MAX_LENGTH_FLAG              =  $00000020;
+  CMSG_CMS_ENCAPSULATED_CONTENT_FLAG=  $00000040;
+  CMSG_CRYPT_RELEASE_CONTEXT_FLAG   =  $00008000;
+  CMSG_CTRL_VERIFY_SIGNATURE        = 1;
+  CMSG_CTRL_DECRYPT                 = 2;
+  CMSG_CTRL_VERIFY_HASH             = 5;
+  CMSG_CTRL_ADD_SIGNER              = 6;
+  CMSG_CTRL_DEL_SIGNER              = 7;
+  CMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR  = 8;
+  CMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR  = 9;
+  CMSG_CTRL_ADD_CERT                = 10;
+  CMSG_CTRL_DEL_CERT                = 11;
+  CMSG_CTRL_ADD_CRL                 = 12;
+  CMSG_CTRL_DEL_CRL                 = 13;
+  CMSG_CTRL_ADD_ATTR_CERT           = 14;
+  CMSG_CTRL_DEL_ATTR_CERT           = 15;
+  CMSG_CTRL_KEY_TRANS_DECRYPT       = 16;
+  CMSG_CTRL_KEY_AGREE_DECRYPT       = 17;
+  CMSG_CTRL_MAIL_LIST_DECRYPT       = 18;
+  CMSG_CTRL_VERIFY_SIGNATURE_EX     = 19;
+  CMSG_CTRL_ADD_CMS_SIGNER_INFO     = 20;
 
   //Trust Error Conditions; used XuDigsigS:1236
   CERT_TRUST_NO_ERROR=0;
@@ -192,7 +195,7 @@ CMSG_CTRL_ADD_CMS_SIGNER_INFO     = 20;
   CMSG_SIGNED_AND_ENVELOPED= 4;
   CMSG_HASHED         =      5;
   CMSG_ENCRYPTED      =      6;
-   //http://code.hhnotifier.com/Main/Cert/CertApiExt.pas.html
+  //http://code.hhnotifier.com/Main/Cert/CertApiExt.pas.html
   CERT_ID_ISSUER_SERIAL_NUMBER    = 1;
   CERT_ID_KEY_IDENTIFIER          = 2;
   CERT_ID_SHA1_HASH               = 3;
@@ -270,20 +273,19 @@ CMSG_CTRL_ADD_CMS_SIGNER_INFO     = 20;
 type
 
   WCRYPT2Type = record
-      value:DWORD;
-      class operator Implicit(a:WCRYPT2Type): boolean;
-      class operator Implicit(a:WCRYPT2Type): cardinal;
-      class operator GreaterThan(a:WCRYPT2Type;b:DWORD):boolean;
-      class operator Equal(a:WCRYPT2Type;b:DWORD):boolean;
-      class operator NotEqual(a:WCRYPT2Type;b:DWORD):boolean;
+    value:DWORD;
+    class operator Implicit(a:WCRYPT2Type): boolean;
+    class operator Implicit(a:WCRYPT2Type): cardinal;
+    class operator GreaterThan(a:WCRYPT2Type;b:DWORD):boolean;
+    class operator Equal(a:WCRYPT2Type;b:DWORD):boolean;
+    class operator NotEqual(a:WCRYPT2Type;b:DWORD):boolean;
   end;
 
   pCharArray = array[0..0] of pByte;
   ppCharArray = ^pCharArray;
-  //ByteArray = array[0..0] of byte;
-  //pByteArray = ^ByteArray;
   DWORDArray = array[0..0] of DWORD;
   pDwordArray = ^DWORDArray;
+  ALG_ID = DWORD;
 
   HCRYPTPROV = ULONG;
   PHCRYPTPROV = ^HCRYPTPROV;
@@ -313,10 +315,6 @@ type
     dwErrorStatus: DWORD;
     dwInfoStatus : DWORD;
   end;
-
-
-
-  ALG_ID = DWORD;
 
   extension_param = record
     CbData : DWORD;
@@ -384,30 +382,26 @@ type
   pCRYPT_HASH_BLOB=^CRYPT_HASH_BLOB;
 
   CERT_PUBLIC_KEY_INFO = record
-     Algorithm : CRYPT_ALGORITHIM_IDENTIFIER;
-     PublicKey : CRYPT_BIT_BLOB ;
+    Algorithm : CRYPT_ALGORITHIM_IDENTIFIER;
+    PublicKey : CRYPT_BIT_BLOB ;
   end;
-
   pCERT_PUBLIC_KEY_INFO = ^CERT_PUBLIC_KEY_INFO;
-
-
 
  //http://msdn.microsoft.com/en-us/library/windows/desktop/aa377200(v=vs.85).aspx
   CERT_INFO = record
-  dwVersion             : DWORD;
-  SerialNumber          : CRYPT_INTEGER_BLOB;
-  SignatureAlgorithm    : CRYPT_ALGORITHIM_IDENTIFIER ;
-  Issuer                : CERT_NAME_BLOB;
-  NotBefore             : FILETIME;
-  NotAfter              : FILETIME;
-  Subject               : CERT_NAME_BLOB;
-  SubjectPublicKeyInfo  : CERT_PUBLIC_KEY_INFO;
-  IssuerUniqueId        : CRYPT_BIT_BLOB;
-  SubjectUniqueId       : CRYPT_BIT_BLOB;
-  cExtension            : DWORD;
-  rgExtension           : PCERT_EXTENSION;
+    dwVersion             : DWORD;
+    SerialNumber          : CRYPT_INTEGER_BLOB;
+    SignatureAlgorithm    : CRYPT_ALGORITHIM_IDENTIFIER ;
+    Issuer                : CERT_NAME_BLOB;
+    NotBefore             : FILETIME;
+    NotAfter              : FILETIME;
+    Subject               : CERT_NAME_BLOB;
+    SubjectPublicKeyInfo  : CERT_PUBLIC_KEY_INFO;
+    IssuerUniqueId        : CRYPT_BIT_BLOB;
+    SubjectUniqueId       : CRYPT_BIT_BLOB;
+    cExtension            : DWORD;
+    rgExtension           : PCERT_EXTENSION;
   end;
-
   PCERT_INFO=^CERT_INFO;
 
   CERT_CONTEXT = record
@@ -453,10 +447,6 @@ type
     rgUnauthAttr:pointer;// PCRYPT_ATTRIBUTE;
     dwFlags: DWORD;
     dwInnerContentType: DWORD;
-
-
-
-
   end;
 
   CRYPT_KEY_PROV_PARAM = record
@@ -499,12 +489,10 @@ type
     DistPointName: CRL_DIST_POINT_NAME;
   end;
 
-
-
   CRYPT_ATTRIBUTE = record
-  pszObjId:string;
-  cValue:DWORD;
-  rgValue:PCRYPT_ATTR_BLOB;
+    pszObjId:string;
+    cValue:DWORD;
+    rgValue:PCRYPT_ATTR_BLOB;
   end;
   pCRYPT_ATTRIBUTE = ^CRYPT_ATTRIBUTE;
 
@@ -517,13 +505,13 @@ type
   CERT_ID=record
     dwIDChoice:DWORD;
     case DWORD of
-     1:
-       (IssuerSerialNumber:CERT_ISSUER_SERIAL_NUMBER; );
-     2:
-       (KeyId:CRYPT_HASH_BLOB;);
-     3:
-       (HashId:CRYPT_HASH_BLOB;);
-    end;
+      1:
+        (IssuerSerialNumber:CERT_ISSUER_SERIAL_NUMBER; );
+      2:
+        (KeyId:CRYPT_HASH_BLOB;);
+      3:
+        (HashId:CRYPT_HASH_BLOB;);
+  end;
 
   CMSG_SIGNER_ENCODE_INFO=record
     cbSize:DWORD;
@@ -563,9 +551,9 @@ type
     cbSize : DWORD;
     dwInfoChoice : DWORD;
     case DWORD of
-     1: (pvInfo: pointer;);
-     2: (pSerializedInfo: PCERT_STRONG_SIGN_SERIALIZED_INFO;);
-     3: (pszOID: pointer;);
+      1: (pvInfo: pointer;);
+      2: (pSerializedInfo: PCERT_STRONG_SIGN_SERIALIZED_INFO;);
+      3: (pszOID: pointer;);
   end;
   PCCERT_STRONG_SIGN_PARA=^CERT_STRONG_SIGN_PARA;
 
@@ -579,11 +567,11 @@ type
   pCRYPT_VERIFY_MESSAGE_PARA=^CRYPT_VERIFY_MESSAGE_PARA;
 
   CRYPT_DECRYPT_MESSAGE_PARA = record
-       cbSize:DWORD;
-       EncodingType:DWORD;
-       cCertStore:DWORD;
-       rghCertStore: array of HCERTSTORE;
-       dwFlags:DWORD;
+    cbSize:DWORD;
+    EncodingType:DWORD;
+    cCertStore:DWORD;
+    rghCertStore: array of HCERTSTORE;
+    dwFlags:DWORD;
   end;
   pCRYPT_DECRYPT_MESSAGE_PARA = ^CRYPT_DECRYPT_MESSAGE_PARA;
 
@@ -594,7 +582,7 @@ type
   pCRYPT_ATTRIBUTES=^CRYPT_ATTRIBUTES;
 
   CMSG_SIGNER_INFO = record
-  dwVersion:DWORD;
+    dwVersion:DWORD;
     Issuer: CERT_NAME_BLOB;
     SerialNumber: CRYPT_INTEGER_BLOB;
     HashAlgorithm: CRYPT_ALGORITHM_IDENTIFIER;
@@ -618,10 +606,10 @@ type
   PCERT_REVOCATION_CHAIN_PARA=^CERT_REVOCATION_CHAIN_PARA;
 
   CRL_ENTRY = record
-   SerialNumber:CRYPT_INTEGER_BLOB;
-   RevocationDate : FILETIME;
-   cExtension : DWORD;
-   rgExtension: array of PCERT_EXTENSION;
+    SerialNumber:CRYPT_INTEGER_BLOB;
+    RevocationDate : FILETIME;
+    cExtension : DWORD;
+    rgExtension: array of PCERT_EXTENSION;
   end;
   PCRL_ENTRY=^CRL_ENTRY;
 
@@ -645,15 +633,13 @@ type
     pCRLInfo:PCRL_INFO;
     hCertStore:HCERTSTORE;
   end;
-   PCRL_CONTEXT=^CRL_CONTEXT;
-   PCCRL_CONTEXT=^CRL_CONTEXT;
-
+  PCRL_CONTEXT=^CRL_CONTEXT;
+  PCCRL_CONTEXT=^CRL_CONTEXT;
 
   CERT_REVOCATION_CRL_INFO=record
     cbSize:DWORD;
     pBaseCRLContext:PCCRL_CONTEXT;
     pDeltaCRLContext:PCCRL_CONTEXT;
-   // pCRLEnry: PCRL_ENTRY;
     fDeltaCRLEntry: BOOLEAN;
   end;
   PCERT_REVOCATION_CRL_INFO=^CERT_REVOCATION_CRL_INFO;
@@ -665,13 +651,6 @@ type
     rgCertStore: pointer;
     hCrlStore: HCERTSTORE;
     pftTimeToUse: pointer;
-    //dwUrlRetrievalTimeout: DWORD;
-    //fCheckFreshnessTime:BOOLEAN;
-    //dwFreshnessTime :DWORD;
-    //pftCurrentTime: pointer;
-    //pCrlInfo:PCERT_REVOCATION_CRL_INFO;
-    //pftCacheResync:pointer;
-    //pChainPara:PCERT_REVOCATION_CHAIN_PARA;
   end;
   PCERT_REVOCATION_PARA=^CERT_REVOCATION_PARA;
 
@@ -692,8 +671,8 @@ type
     cUsageIdentifier:DWORD;
     rgpszUsageIdentifier: array of LPSTR;
   end;
-   PCTL_USAGE = ^CTL_USAGE ;
-   CERT_ENHKEY_USAGE = CTL_USAGE;
+  PCTL_USAGE = ^CTL_USAGE ;
+  CERT_ENHKEY_USAGE = CTL_USAGE;
 
 
   CTL_INFO =record
@@ -724,11 +703,11 @@ type
   PCTL_CONTEXT=^CTL_CONTEXT;
 
   CERT_TRUST_LIST_INFO = record
-     cbSize: DWORD;
-     pCtlEntry:PCTL_ENTRY;
-     pCtlContext:PCCTL_CONTEXT;
-   end;
-   PCERT_TRUST_LIST_INFO=^CERT_TRUST_LIST_INFO;
+    cbSize: DWORD;
+    pCtlEntry:PCTL_ENTRY;
+    pCtlContext:PCCTL_CONTEXT;
+  end;
+  PCERT_TRUST_LIST_INFO=^CERT_TRUST_LIST_INFO;
 
   CERT_SIMPLE_CHAIN = record
     cbSize:DWORD;
@@ -744,16 +723,15 @@ type
   PCCERT_CHAIN_CONTEXT = ^CERT_CHAIN_CONTEXT;
 
   CERT_CHAIN_CONTEXT = record
-  cbSize: DWORD;
-  TrustStatus:  CERT_TRUST_STATUS;
-  cChain:DWORD;
-  rgpChain: PCERT_SIMPLE_CHAIN;
-  cLowerQualityChainContext: DWORD;
-  rgpLowerQualityChainContext: PCCERT_CHAIN_CONTEXT;
-  fHasRevocationFreshnessTime:BOOLEAN;
-  dwRevocationFreshnessTime: DWORD;
+    cbSize: DWORD;
+    TrustStatus:  CERT_TRUST_STATUS;
+    cChain:DWORD;
+    rgpChain: PCERT_SIMPLE_CHAIN;
+    cLowerQualityChainContext: DWORD;
+    rgpLowerQualityChainContext: PCCERT_CHAIN_CONTEXT;
+    fHasRevocationFreshnessTime:BOOLEAN;
+    dwRevocationFreshnessTime: DWORD;
   end;
-
   PCERT_CHAIN_CONTEXT = ^CERT_CHAIN_CONTEXT;
 
   CERT_USAGE_MATCH = record
@@ -769,17 +747,9 @@ type
     dwUrlRetrievalTimeout: DWORD;
     fCheckRevocationFreshnessTime: BOOLEAN;
     dwRevocationFreshnessTime : DWORD;
-    //Windows VistA
-    //pftCacheResync : pointer;
-
-    //Windows 8
-    //pStrongSignPara :PCCERT_STRONG_SIGN_PARA ;
-    //dwStrongSignFlags: DWORD;
   end;
-
-  var
-    MasterCertChain :  boolean;
-
+  
+  //CRYPT* function signatures
 
   function CryptAcquireContextA( pHProv: Pointer; pszContainer: PAnsiChar; pszProvider: PAnsiChar; dwProvType: DWORD; dwFlags: DWORD) : boolean; stdcall;
   function CryptAcquireContext( pHProv: Pointer; pszContainer: PAnsiChar; pszProvider: PAnsiChar; dwProvType: DWORD; dwFlags: DWORD) : boolean; stdcall;
@@ -801,14 +771,12 @@ type
   function CryptMsgClose(hmsg: HCRYPTMSG):boolean; stdcall;
   function CryptVerifyMessageSignature(verifyPara:PCRYPT_VERIFY_MESSAGE_PARA;SignerIndex:DWORD;pbSignedBlob:pointer;cbSignedBlob:DWORD;pbDecoded:pointer;pcbDecoded:pointer;ppSignerCert:pointer):boolean; stdcall;
   function CryptGenKey(hProv: HCRYPTPROV;AlgId: ALG_ID;dwFlags:DWORD;hKey:pointer):boolean; stdcall;
-
   function GET_ALG_CLASS(algid:DWORD):DWORD;
-
   function CryptEnumProvidersA(index:DWORD;reserved:pointer;flags:DWORD;provtype:pointer;provname:pointer;provnamesize:pointer): boolean ; stdcall;
   function CryptEnumProviderTypesA(index:DWORD;reserved:pointer;flags:DWORD;provtype:pointer;provtypename:pointer;provtypenamesize:pointer):boolean ; stdcall;
   function CryptGetDefaultProviderA(provType:DWORD;reserved:DWORD;dwFlags:DWORD;provname:pointer;provnamesize:pointer) : boolean ; stdcall;
 
-
+  //CERT* function signatures
 
   function CertVerifyRevocation(c_ENCODING_TYPE: DWORD; dwRevType: DWORD; cContext: DWORD; rgpvContext: pointer; dwFlags:DWORD; pRevPara: pointer; pRevStatus: pointer) : boolean; stdcall;
   function CertOpenSystemStoreA(hProv: HCRYPTPROV; szSubsystemProtocol: PAnsiChar) : DWORD; stdcall;
@@ -916,8 +884,7 @@ implementation
   function CertFindCertificateInStore; external CRYPT32 name 'CertFindCertificateInStore';
   function CertAddCertificateContextToStore; external CRYPT32 name 'CertAddCertificateContextToStore';
   function CertDeleteCertificateFromStore; external CRYPT32 name 'CertDeleteCertificateFromStore';
-  function CertCreateCertificateContext; external CRYPT32 name 'CertCreateCertificateContext';
-
+  function CertCreateCertificateContext; external CRYPT32 name 'CertCreateCertificateContext';  
   function CertGetCertificateChain; external CRYPT32 name 'CertGetCertificateChain';
   function CertGetIntendedKeyUsage; external CRYPT32 name 'CertGetIntendedKeyUsage';
   end.
